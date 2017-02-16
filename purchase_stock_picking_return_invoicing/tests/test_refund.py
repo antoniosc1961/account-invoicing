@@ -147,8 +147,8 @@ class PurchaseStockRefundPickingCase(SavepointCase):
         # Check invoice status
         self.assertEqual(
             po.invoice_status,
-            'invoiced',
-            ('Purchase Stock: po invoice_status should be "invoiced" '
+            'to invoice',
+            ('Purchase Stock: po invoice_status should be "to invoice" '
              'instead of "%s"') % po.invoice_status)
 
         inv_2 = self.env['account.invoice'].with_context(
