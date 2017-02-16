@@ -56,8 +56,8 @@ class PurchaseOrder(models.Model):
         result = action.read()[0]
         refunds = self.invoice_ids.filtered(lambda x: x.type == 'in_refund')
         # override the context to get rid of the default filtering
-        result['context'] = {'type': 'in_refund', 'default_purchase_id':
-            self.id}
+        result['context'] = {'type': 'in_refund',
+                             'default_purchase_id': self.id}
 
         if not refunds:
             # Choose a default account journal in the
@@ -105,7 +105,6 @@ class PurchaseOrderLine(models.Model):
     @api.depends('order_id.state', 'move_ids.state')
     def _compute_qty_received(self):
         super(PurchaseOrderLine, self)._compute_qty_received()
-        product_uom_model = self.env['product.uom']
         for line in self:
             bom_delivered = self.sudo()._get_bom_delivered(line.sudo())
             if not bom_delivered:
