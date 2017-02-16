@@ -16,5 +16,9 @@ class AccountInvoice(models.Model):
             qty = line.qty_received - line.qty_invoiced
             data['quantity'] = qty
         if self.type == 'in_refund':
+            invoice_line = self.env['account.invoice.line']
             data['quantity'] *= -1
+            data['account_id'] = invoice_line.with_context(
+                {'journal_id': self.journal_id.id,
+                 'type': 'in_refund'})._default_account(),
         return data

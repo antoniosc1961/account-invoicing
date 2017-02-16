@@ -47,7 +47,7 @@ class StockReturnPickingLine(models.TransientModel):
         readonly=True)
 
     to_refund_po = fields.Boolean(
-        string="To Refund",
+        string="To Refund in PO",
         help='Trigger a decrease of the received quantity in the associated '
              'Purchase Order',
     )
