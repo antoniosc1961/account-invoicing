@@ -20,5 +20,10 @@ class AccountInvoice(models.Model):
             data['quantity'] *= -1
             data['account_id'] = invoice_line.with_context(
                 {'journal_id': self.journal_id.id,
-                 'type': 'in_refund'})._default_account(),
+                 'type': 'in_invoice'})._default_account(),
+            account = invoice_line.get_invoice_line_account(
+                'in_invoice', line.product_id,
+                self.purchase_id.fiscal_position_id, self.env.user.company_id)
+            if account:
+                data['account_id'] = account.id
         return data
