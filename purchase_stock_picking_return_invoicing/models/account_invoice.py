@@ -2,8 +2,10 @@
 # Copyright 2017 Eficent Business and IT Consulting Services
 #           <contact@eficent.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+import logging
 
 from openerp import models
+_logger = logging.getLogger(__name__)
 
 
 class AccountInvoice(models.Model):
@@ -26,4 +28,6 @@ class AccountInvoice(models.Model):
                 self.purchase_id.fiscal_position_id, self.env.user.company_id)
             if account:
                 data['account_id'] = account.id
+        msg = 'PR 230. Debug. Data: %s' % data
+        _logger.info(msg)
         return data
