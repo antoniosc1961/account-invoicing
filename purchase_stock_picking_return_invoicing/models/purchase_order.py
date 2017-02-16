@@ -31,9 +31,9 @@ class PurchaseOrder(models.Model):
                                 move.product_uom, move.product_uom_qty,
                                 line.product_uom)
                             qty_ordered = line.product_qty - qty
-                            if float_compare(
+                            if abs(float_compare(
                                     line.qty_invoiced, qty_ordered,
-                                    precision_digits=precision) == -1:
+                                    precision_digits=precision)) == 1:
                                 invoice_status[line] = 'to invoice'
                                 break
                             else:
