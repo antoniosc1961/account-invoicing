@@ -13,8 +13,6 @@ class PurchaseOrder(models.Model):
     @api.depends('order_line.qty_received',
                  'order_line.move_ids.state')
     def _get_invoiced(self):
-        precision = self.env['decimal.precision'].precision_get(
-            'Product Unit of Measure')
         super(PurchaseOrder, self)._get_invoiced()
         for order in self:
             if order.state != 'purchase':
@@ -96,7 +94,7 @@ class PurchaseOrder(models.Model):
     def action_view_invoice(self):
         result = super(PurchaseOrder, self).action_view_invoice()
         invoices = self.invoice_ids.filtered(
-                    lambda x: x.type == 'in_invoice')
+            lambda x: x.type == 'in_invoice')
         # choose the view_mode accordingly
         if len(invoices) != 1:
             result['domain'] = "[('id', 'in', " + str(invoices.ids) + ")]"
