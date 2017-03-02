@@ -25,15 +25,13 @@ class StockReturnPicking(models.TransientModel):
 
     @api.multi
     def _create_returns(self):
-        """Mark lines to refund."""
         new_picking_id, pick_type_id = super(
             StockReturnPicking, self)._create_returns()
         new_picking = self.env['stock.picking'].browse(new_picking_id)
         for move in new_picking.move_lines:
             return_picking_line = self.product_return_moves.filtered(
                 lambda r: r.move_id == move.origin_returned_move_id)
-            if return_picking_line and return_picking_line.to_refund_po:
-                move.to_refund_po = True
+            if return_picking_line:
                 move.purchase_line_id = return_picking_line.purchase_line_id
         return new_picking_id, pick_type_id
 
@@ -45,9 +43,3 @@ class StockReturnPickingLine(models.TransientModel):
         comodel_name='purchase.order.line',
         string="Purchase order line",
         readonly=True)
-
-    to_refund_po = fields.Boolean(
-        string="To Refund in PO",
-        help='Trigger a decrease of the received quantity in the associated '
-             'Purchase Order',
-    )

@@ -24,7 +24,7 @@ received the bill from the supplier
 #. Go to *Shipment > Validate > Apply* so as to receive the quantities ordered.
 #. Press the button *Reverse*.
 #. In the wizard *Reverse Quantity* Set *Quantity* to the quantity to be
-   returned, and check *To Refund*. Press *Return* to complete the wizard.
+   returned. Press *Return* to complete the wizard.
 #. On the return picking press *Validate > Apply*.
 #. Go back to the purchase order. You will notice that the field *Received
    Qty* is now the quantity that was originally received, less the quantity
@@ -47,7 +47,7 @@ received a bill from the supplier.
 #. Go to the original incoming shipment
 #. Press the button *Reverse*.
 #. In the wizard *Reverse Quantity* Set *Quantity* to the quantity to be
-   returned, and check *To Refund*. Press *Return* to complete the wizard.
+   returned. Press *Return* to complete the wizard.
 #. On the return picking press *Validate > Apply*.
 #. Go back to the purchase order. It will have  *Invoice Status* as 'Waiting
    Invoces'. You will notice that the field *Received Qty* is now the quantity

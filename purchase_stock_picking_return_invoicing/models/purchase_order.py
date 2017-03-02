@@ -11,39 +11,46 @@ class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
     @api.depends('order_line.qty_received',
-                 'order_line.move_ids.state',
-                 'order_line.move_ids.to_refund_po')
+                 'order_line.move_ids.state')
     def _get_invoiced(self):
         precision = self.env['decimal.precision'].precision_get(
             'Product Unit of Measure')
         super(PurchaseOrder, self)._get_invoiced()
         for order in self:
-            invoice_status = {}
-            for line in order.order_line:
-                invoice_status[line] = line.order_id.invoice_status
-                if line.state == 'purchase' and \
-                        line.product_id.purchase_method == 'receive':
-                    for move in line.move_ids:
-                        if move.state == 'done' \
-                                and move.location_id.usage != \
-                                'supplier' and move.to_refund_po:
-                            qty = move.product_uom._compute_qty_obj(
-                                move.product_uom, move.product_uom_qty,
-                                line.product_uom)
-                            qty_ordered = line.product_qty - qty
-                            if abs(float_compare(
-                                    line.qty_invoiced, qty_ordered,
-                                    precision_digits=precision)) == 1:
-                                invoice_status[line] = 'to invoice'
-                                break
-                            else:
-                                invoice_status[line] = 'invoiced'
-            if any(invoice_status[line] == 'to invoice' for line in
-                   invoice_status.keys()):
+            if order.state != 'purchase':
+                order.invoice_status = 'no'
+                continue
+            if any(line.invoice_status == 'to invoice'
+                   for line in order.order_line):
                 order.invoice_status = 'to invoice'
-            elif all(invoice_status[line] == 'invoiced' for line in
-                     invoice_status.keys()):
+            elif all(line.invoice_status == 'invoiced'
+                     for line in order.order_line):
                 order.invoice_status = 'invoiced'
+            else:
+                order.invoice_status = 'no'
+
+    @api.depends('order_line.invoice_lines.invoice_id.state')
+    def _compute_invoice_refund(self):
+        for order in self:
+            invoices = self.env['account.invoice']
+            for line in order.order_line:
+                invoices |= line.invoice_lines.mapped('invoice_id').filtered(
+                    lambda x: x.type == 'in_refund')
+            order.invoice_refund_count = len(invoices)
+
+    @api.depends('order_line.invoice_lines.invoice_id.state')
+    def _compute_invoice(self):
+        super(PurchaseOrder, self)._compute_invoice()
+        for order in self:
+            invoices = self.env['account.invoice']
+            for line in order.order_line:
+                invoices |= line.invoice_lines.mapped('invoice_id').filtered(
+                    lambda x: x.type == 'in_invoice')
+            order.invoice_count = len(invoices)
+
+    invoice_refund_count = fields.Integer(compute="_compute_invoice_refund",
+                                          string='# of Invoice Refunds',
+                                          copy=False, default=0)
 
     @api.multi
     def action_view_invoice_refund(self):
@@ -85,24 +92,25 @@ class PurchaseOrder(models.Model):
             result['res_id'] = refunds.id
         return result
 
-    @api.depends('order_line.invoice_lines.invoice_id.state')
-    def _compute_invoice_refund(self):
-        for order in self:
-            invoices = self.env['account.invoice']
-            for line in order.order_line:
-                invoices |= line.invoice_lines.mapped('invoice_id').filtered(
-                    lambda x: x.type == 'in_refund')
-            order.invoice_refund_count = len(invoices)
-
-    invoice_refund_count = fields.Integer(compute="_compute_invoice_refund",
-                                          string='# of Invoice Refunds',
-                                          copy=False, default=0)
+    @api.multi
+    def action_view_invoice(self):
+        result = super(PurchaseOrder, self).action_view_invoice()
+        invoices = self.invoice_ids.filtered(
+                    lambda x: x.type == 'in_invoice')
+        # choose the view_mode accordingly
+        if len(invoices) != 1:
+            result['domain'] = "[('id', 'in', " + str(invoices.ids) + ")]"
+        elif len(invoices) == 1:
+            res = self.env.ref('account.invoice_supplier_form', False)
+            result['views'] = [(res and res.id or False, 'form')]
+            result['res_id'] = invoices.id
+        return result
 
 
 class PurchaseOrderLine(models.Model):
     _inherit = "purchase.order.line"
 
-    @api.depends('order_id.state', 'move_ids.state')
+    @api.depends('order_id.state', 'move_ids.state', 'move_ids')
     def _compute_qty_received(self):
         super(PurchaseOrderLine, self)._compute_qty_received()
         for line in self:
@@ -110,7 +118,7 @@ class PurchaseOrderLine(models.Model):
             if not bom_delivered:
                 for move in line.move_ids:
                     if move.state == 'done' and move.location_id.usage != \
-                            'supplier' and move.to_refund_po:
+                            'supplier':
                         qty = move.product_uom._compute_qty_obj(
                             move.product_uom, move.product_uom_qty,
                             line.product_uom)
@@ -137,3 +145,44 @@ class PurchaseOrderLine(models.Model):
                     # original method the quantity is added when refund
                     # invoices are created with reference to a PO.
                     line.qty_invoiced -= inv_qty * 2
+
+    @api.depends('order_id.state', 'qty_received', 'qty_invoiced',
+                 'product_qty', 'move_ids.state',
+                 'invoice_lines.invoice_id.state')
+    def _compute_qty_to_invoice(self):
+        precision = self.env['decimal.precision'].precision_get(
+            'Product Unit of Measure')
+        for line in self:
+            if line.order_id.state != 'purchase':
+                line.qty_to_invoice = 0.0
+                line.invoice_status = 'no'
+                continue
+            else:
+                if line.product_id.purchase_method == 'receive':
+                    line.qty_to_invoice = line.qty_received - line.qty_invoiced
+                else:
+                    line.qty_to_invoice = line.product_qty - line.qty_invoiced
+
+            if line.product_id.purchase_method == 'receive' and not \
+                    line.move_ids.filtered(lambda x: x.state == 'done'):
+                line.invoice_status = 'no'
+                continue
+
+            if abs(float_compare(line.qty_to_invoice, 0.0,
+                                 precision_digits=precision)) == 1:
+                line.invoice_status = 'to invoice'
+            elif float_compare(line.qty_to_invoice, 0.0,
+                               precision_digits=precision) == 0:
+                line.invoice_status = 'invoiced'
+            else:
+                line.invoice_status = 'no'
+
+    qty_to_invoice = fields.Float(compute="_compute_qty_to_invoice",
+                                  string='Qty to Invoice',
+                                  copy=False, default=0.0)
+    invoice_status = fields.Selection([
+        ('no', 'Not purchased'),
+        ('to invoice', 'Waiting Invoices'),
+        ('invoiced', 'Invoice Received'),
+        ], string='Invoice Status', compute='_compute_qty_to_invoice',
+        readonly=True, copy=False, default='no')

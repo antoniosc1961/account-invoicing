@@ -126,7 +126,6 @@ class PurchaseStockRefundPickingCase(SavepointCase):
             active_id=pick.id).create({})
         return_wizard.product_return_moves.write({
             "quantity": 2,
-            "to_refund_po": True,
         })
         return_pick = pick.browse(return_wizard.create_returns()["res_id"])
         return_pick.force_assign()
@@ -244,8 +243,7 @@ class PurchaseStockRefundPickingCase(SavepointCase):
         return_wizard = self.env["stock.return.picking"].with_context(
             active_id=pick.id).create({})
         return_wizard.product_return_moves.write({
-            "quantity": 2,
-            "to_refund_po": True,
+            "quantity": 2
         })
         return_pick = pick.browse(return_wizard.create_returns()["res_id"])
         return_pick.force_assign()

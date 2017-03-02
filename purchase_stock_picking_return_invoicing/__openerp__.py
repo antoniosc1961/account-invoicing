@@ -17,7 +17,7 @@
         "purchase",
     ],
     "data": [
-        "wizards/stock_return_picking_view.xml",
-        "views/purchase_view.xml"
+        "views/purchase_view.xml",
+        "wizards/stock_return_picking_view.xml"
     ],
 }
