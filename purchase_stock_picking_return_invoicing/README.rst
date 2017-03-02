@@ -84,9 +84,9 @@ discrepancies).
 Known issues / Roadmap
 ======================
 
-* This addon is a pseudobackport of a functionality that exists natively in
-  v10, plus a fix for https://github.com/odoo/odoo/issues/13974, so this addon
-  will never have to be migrated to v10.
+* The functionality of return processing with refunds is being discussed with
+  Odoo here: https://github.com/odoo/odoo/issues/13974, so this addon may not
+  need to be migrated to v10.
 
 Bug Tracker
 ===========

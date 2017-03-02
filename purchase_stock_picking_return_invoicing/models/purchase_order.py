@@ -54,11 +54,11 @@ class PurchaseOrder(models.Model):
 
     @api.multi
     def action_view_invoice_refund(self):
-        '''
+        """
         This function returns an action that display existing vendor refund
         bills of given purchase order id.
         When only one found, show the vendor bill immediately.
-        '''
+        """
         action = self.env.ref('account.action_invoice_tree2')
         result = action.read()[0]
         refunds = self.invoice_ids.filtered(lambda x: x.type == 'in_refund')
