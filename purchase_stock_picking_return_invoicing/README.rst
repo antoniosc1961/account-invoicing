@@ -6,10 +6,18 @@
 Refund Returned Pickings from Purchase Orders
 =============================================
 
-This module extends the functionality of purchase orders to support marking some
-returned pickings as "To refund in Purchase Order",  excluding those quantities
-from the quantity to invoice, when the product is to be invoiced based on
-received quantities.
+This module extends the functionality of purchase orders to consider
+product returns as less quantity to invoice, or quantity to refund (if a
+vendor bill has already been received).
+
+In the purchase order you are able to display, for each line, the quantity
+to invoice, that is computed based on what was ordered, received, returned
+and invoiced.
+
+From the purchase order you have now the option to create a vendor bill or a
+refund. The decision will depend on the quantity to invoice values (negative
+quantity to invoice means that you have to create a refund).
+
 
 Usage
 =====
@@ -28,7 +36,8 @@ received the bill from the supplier
 #. On the return picking press *Validate > Apply*.
 #. Go back to the purchase order. You will notice that the field *Received
    Qty* is now the quantity that was originally received, less the quantity
-   that was returned.
+   that was returned. The field *Quantity to Invoice* is now reduced to the
+   quantity ordered less the quantity returned.
 #. Press the button *Invoices* to create the vendor bill.
 #. The proposed vendor bill will be proposed for the difference between the
    received and the returned quantity.
@@ -51,14 +60,22 @@ received a bill from the supplier.
 #. On the return picking press *Validate > Apply*.
 #. Go back to the purchase order. It will have  *Invoice Status* as 'Waiting
    Invoces'. You will notice that the field *Received Qty* is now the quantity
-   that was originally received, less the quantity that was returned.
-#. Press the button *Refunds* to create the vendor refund bill.
-#. The proposed vendor refund bill will be proposed for the difference between
-   the received and the returned quantity.
+   that was originally received, less the quantity that was returned. The
+   field *Quantity to Invoice* is now reduced to the quantity ordered
+   less the quantity returned, less the quantity already invoiced.
+#. Press the button *Refunds* to create the vendor refund bill (since the
+   field *Quantity to Invoice* is negative).
+#. The proposed vendor refund bill will be proposed for the quantity that is
+   to be refunded.
 #. If you back to the purchase order, you will notice that *Invoice Status*
    is now 'Invoiced', even when the quantity ordered does not match with the
-   quantity invoiced, because you chose to refund some products.
+   quantity invoiced, because you did return some products.
 
+Remark: As part of the 3-way match proces, if you accept that you will not
+claim for a refund for the quantity returned to the supplier, just set the
+purchase status as 'Done' at the end of the process, and the quantity to
+invoice for the items will be set to 0 (because you have accepted the
+discrepancies).
 
 .. image:: https://odoo-community.org/website/image/ir.attachment/5784_f2813bd/datas
    :alt: Try me on Runbot

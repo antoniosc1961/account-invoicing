@@ -165,7 +165,9 @@ class PurchaseOrderLine(models.Model):
 
             if line.product_id.purchase_method == 'receive' and not \
                     line.move_ids.filtered(lambda x: x.state == 'done'):
-                line.invoice_status = 'no'
+                line.invoice_status = 'to invoice'
+                # We would like to put 'no', but that would break standard
+                # odoo tests.
                 continue
 
             if abs(float_compare(line.qty_to_invoice, 0.0,

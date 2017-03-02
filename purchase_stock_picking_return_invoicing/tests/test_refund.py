@@ -61,7 +61,8 @@ class PurchaseStockRefundPickingCase(SavepointCase):
         # invoice in on receipt, nothing should be invoiced
         self.assertEqual(po.invoice_status, 'to invoice',
                          ('Purchase Stock: po invoice_status should be '
-                          '"to invoice" instead of "%s".') % po.invoice_status)
+                          '"To invoice" instead of "%s".') %
+                         po.invoice_status)
 
         # Check quantity invoiced
         inv_qty = sum(pol.qty_invoiced for pol in po.order_line)
@@ -204,7 +205,8 @@ class PurchaseStockRefundPickingCase(SavepointCase):
         # invoice in on receipt, nothing should be invoiced
         self.assertEqual(po.invoice_status, 'to invoice',
                          ('Purchase Stock: po invoice_status should be '
-                          '"to invoice" instead of "%s".') % po.invoice_status)
+                          '"To Invoice" instead of "%s".') %
+                         po.invoice_status)
 
         # Check quantity invoiced
         inv_qty = sum(pol.qty_invoiced for pol in po.order_line)
